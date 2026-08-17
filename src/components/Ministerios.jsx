@@ -31,7 +31,7 @@ export default function Ministerios() {
           </p>
 
           <h2 className="mt-3 text-4xl font-bold">
-            Nossos ministérios
+            Nossos Ministérios
           </h2>
         </div>
 
