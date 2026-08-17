@@ -2,7 +2,7 @@ const cultos = [
   {
     dia: "Domingo",
     horarios: [
-      "09:00 - Reunião de Oração",
+      "09:20 - Reunião de Oração",
       "10:00 — Escola Bíblica Dominical",
       "19:00 — Culto de Adoração",
     ],
