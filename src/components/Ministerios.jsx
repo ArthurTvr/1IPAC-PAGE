@@ -10,6 +10,11 @@ const ministerios = [
       "https://images.unsplash.com/photo-1529156069898-49953e39b3ac",
   },
   {
+    nome: "ADOLESCENTES (UPA)",
+    imagem:
+      "https://images.unsplash.com/photo-1529156069898-49953e39b3ac",
+  },
+  {
     nome: "Mulheres (SAF)",
     imagem:
       "https://images.unsplash.com/photo-1529156069898-49953e39b3ac",
@@ -17,7 +22,7 @@ const ministerios = [
   {
     nome: "Homens (UPH)",
     imagem:
-      "https://images.unsplash.com/photo-1472162072942-cd5147eb3902",
+      "https://images.unsplash.com/photo-1529156069898-49953e39b3ac",
   },
 ];
 
@@ -35,7 +40,7 @@ export default function Ministerios() {
           </h2>
         </div>
 
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
           {ministerios.map((ministerio) => (
             <div
               key={ministerio.nome}
@@ -44,7 +49,7 @@ export default function Ministerios() {
               <img
                 src={ministerio.imagem}
                 alt={ministerio.nome}
-                className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                className="h-full w-full object-cover transition duration-700 group-hover:scale-110"
               />
 
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
