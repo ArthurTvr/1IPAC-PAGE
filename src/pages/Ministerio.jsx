@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import ministerioUCP from "../assets/images/ministeriosucp.jpeg";
 
 const imagensMinisterios = {
-  ucp: "https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9",
+  ucp: ministerioUCP,
   upa: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac",
   ump: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac",
   saf: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac",
@@ -17,16 +18,28 @@ export default function Ministerio() {
   const [ministerio, setMinisterio] = useState(null);
   const [diretoria, setDiretoria] = useState([]);
 
+  // GALERIA
+  const [fotos, setFotos] = useState([]);
+  const [fotoAtual, setFotoAtual] = useState(0);
+
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
+
+  // SWIPE MOBILE
+  const touchStartX = useRef(null);
 
   useEffect(() => {
     carregarMinisterio();
   }, [slug]);
 
+  // =====================================================
+  // CARREGAR MINISTÉRIO
+  // =====================================================
+
   async function carregarMinisterio() {
     setCarregando(true);
     setErro("");
+    setFotoAtual(0);
 
     // BUSCA O MINISTÉRIO
     const { data: ministerioData, error: ministerioError } = await supabase
@@ -38,6 +51,7 @@ export default function Ministerio() {
 
     if (ministerioError) {
       console.error("Erro ao carregar ministério:", ministerioError);
+
       setErro("Não foi possível carregar este ministério.");
       setCarregando(false);
       return;
@@ -51,7 +65,10 @@ export default function Ministerio() {
 
     setMinisterio(ministerioData);
 
-    // BUSCA A DIRETORIA DO ANO ATUAL DO MINISTÉRIO
+    // =====================================================
+    // BUSCA DIRETORIA
+    // =====================================================
+
     const { data: diretoriaData, error: diretoriaError } = await supabase
       .from("ministerio_diretoria")
       .select("*")
@@ -61,14 +78,108 @@ export default function Ministerio() {
 
     if (diretoriaError) {
       console.error("Erro ao carregar diretoria:", diretoriaError);
+
       setErro("Não foi possível carregar a diretoria.");
       setCarregando(false);
       return;
     }
 
     setDiretoria(diretoriaData || []);
+
+    // =====================================================
+    // BUSCA GALERIA
+    // =====================================================
+
+    const { data: fotosData, error: fotosError } = await supabase
+      .from("ministerio_fotos")
+      .select("*")
+      .eq("ministerio_id", ministerioData.id)
+      .eq("ativo", true)
+      .order("ordem", { ascending: true });
+
+    if (fotosError) {
+      console.error("Erro ao carregar fotos:", fotosError);
+
+      // Não bloqueia a página se só a galeria falhar.
+      // Nesse caso usamos a imagem padrão.
+      setFotos([]);
+    } else {
+      setFotos(fotosData || []);
+    }
+
     setCarregando(false);
   }
+
+  // =====================================================
+  // CARROSSEL AUTOMÁTICO
+  // =====================================================
+
+  useEffect(() => {
+    if (fotos.length <= 1) {
+      return;
+    }
+
+    const intervalo = setInterval(() => {
+      setFotoAtual((anterior) =>
+        anterior === fotos.length - 1 ? 0 : anterior + 1,
+      );
+    }, 5000);
+
+    return () => clearInterval(intervalo);
+  }, [fotos.length]);
+
+  function proximaFoto() {
+    if (fotos.length <= 1) {
+      return;
+    }
+
+    setFotoAtual((anterior) =>
+      anterior === fotos.length - 1 ? 0 : anterior + 1,
+    );
+  }
+
+  function fotoAnterior() {
+    if (fotos.length <= 1) {
+      return;
+    }
+
+    setFotoAtual((anterior) =>
+      anterior === 0 ? fotos.length - 1 : anterior - 1,
+    );
+  }
+
+  // =====================================================
+  // SWIPE MOBILE
+  // =====================================================
+
+  function handleTouchStart(e) {
+    touchStartX.current = e.touches[0].clientX;
+  }
+
+  function handleTouchEnd(e) {
+    if (touchStartX.current === null) {
+      return;
+    }
+
+    const touchEndX = e.changedTouches[0].clientX;
+
+    const diferenca = touchStartX.current - touchEndX;
+
+    // Evita trocar por pequenos movimentos
+    if (Math.abs(diferenca) > 50) {
+      if (diferenca > 0) {
+        proximaFoto();
+      } else {
+        fotoAnterior();
+      }
+    }
+
+    touchStartX.current = null;
+  }
+
+  // =====================================================
+  // LOADING
+  // =====================================================
 
   if (carregando) {
     return (
@@ -79,6 +190,10 @@ export default function Ministerio() {
       </main>
     );
   }
+
+  // =====================================================
+  // ERRO
+  // =====================================================
 
   if (erro) {
     return (
@@ -106,6 +221,10 @@ export default function Ministerio() {
     );
   }
 
+  // =====================================================
+  // NÃO ENCONTRADO
+  // =====================================================
+
   if (!ministerio) {
     return (
       <main className="min-h-screen bg-[#f7f6f0] pt-28">
@@ -130,7 +249,22 @@ export default function Ministerio() {
     );
   }
 
-  const imagem = ministerio.imagem_url || imagensMinisterios[ministerio.slug];
+  // =====================================================
+  // IMAGENS
+  // =====================================================
+
+  const imagemPadrao =
+    ministerio.imagem_url || imagensMinisterios[ministerio.slug];
+
+  const imagensCarrossel =
+    fotos.length > 0 ? fotos.map((foto) => foto.imagem_url) : [imagemPadrao];
+
+  const imagemAtual = imagensCarrossel[fotoAtual] || imagemPadrao;
+
+  // =====================================================
+  // WHATSAPP
+  // =====================================================
+
   const numeroWhatsapp = "5533988263667";
 
   const mensagemWhatsapp = encodeURIComponent(
@@ -138,6 +272,7 @@ export default function Ministerio() {
   );
 
   const linkWhatsapp = `https://wa.me/${numeroWhatsapp}?text=${mensagemWhatsapp}`;
+
   return (
     <main className="min-h-screen bg-white pt-24 lg:pt-28">
       {/* HERO / APRESENTAÇÃO */}
@@ -156,13 +291,77 @@ export default function Ministerio() {
           </button>
 
           <div className="grid items-center gap-12 lg:grid-cols-2">
-            {/* FOTO */}
-            <div className="overflow-hidden">
-              <img
-                src={imagem}
-                alt={ministerio.nome_completo}
-                className="h-[350px] w-full object-cover md:h-[450px]"
-              />
+            {/* CARROSSEL */}
+            <div
+              className="group/carrossel relative h-[350px] overflow-hidden bg-neutral-200 md:h-[450px]"
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+            >
+              {/* FAIXA DE FOTOS */}
+              <div
+                className="flex h-full transition-transform duration-700 ease-in-out"
+                style={{
+                  transform: `translateX(-${fotoAtual * 100}%)`,
+                }}
+              >
+                {imagensCarrossel.map((imagem, index) => (
+                  <div key={`${imagem}-${index}`} className="h-full min-w-full">
+                    <img
+                      src={imagem}
+                      alt={`${ministerio.nome_completo} - Foto ${index + 1}`}
+                      className="h-full w-full object-cover"
+                      draggable="false"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {/* SOMBRA LEVE */}
+              {imagensCarrossel.length > 1 && (
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+              )}
+
+              {/* SETAS */}
+              {imagensCarrossel.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={fotoAnterior}
+                    aria-label="Foto anterior"
+                    className="absolute left-4 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center bg-black/40 text-2xl text-white backdrop-blur-sm transition hover:bg-[#164342] md:opacity-0 md:group-hover/carrossel:opacity-100"
+                  >
+                    ‹
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={proximaFoto}
+                    aria-label="Próxima foto"
+                    className="absolute right-4 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center bg-black/40 text-2xl text-white backdrop-blur-sm transition hover:bg-[#164342] md:opacity-0 md:group-hover/carrossel:opacity-100"
+                  >
+                    ›
+                  </button>
+                </>
+              )}
+
+              {/* INDICADORES */}
+              {imagensCarrossel.length > 1 && (
+                <div className="absolute bottom-5 left-1/2 flex -translate-x-1/2 items-center gap-2">
+                  {imagensCarrossel.map((_, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => setFotoAtual(index)}
+                      aria-label={`Ir para foto ${index + 1}`}
+                      className={`h-2.5 rounded-full transition-all duration-300 ${
+                        fotoAtual === index
+                          ? "w-7 bg-white"
+                          : "w-2.5 bg-white/50 hover:bg-white/80"
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* INFORMAÇÕES */}
@@ -190,6 +389,7 @@ export default function Ministerio() {
                   Em breve mais informações sobre esta sociedade.
                 </p>
               )}
+
               <a
                 href={linkWhatsapp}
                 target="_blank"

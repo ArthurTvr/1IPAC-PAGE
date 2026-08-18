@@ -109,7 +109,7 @@ export default function Mensagem() {
             Palavra
           </p>
 
-          <h2 className="mt-3 text-4xl font-bold">Última mensagem</h2>
+          <h2 className="mt-3 text-4xl font-bold">Último Culto</h2>
         </div>
 
         <div className="grid items-center gap-10 lg:grid-cols-2">

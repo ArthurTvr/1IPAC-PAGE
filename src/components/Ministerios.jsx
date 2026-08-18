@@ -12,24 +12,24 @@ const ministerios = [
     imagem: logoUCP,
   },
   {
-    nome: "Jovens (UMP)",
-    slug: "ump",
-    imagem: logoUMP,
-  },
-  {
     nome: "Adolescentes (UPA)",
     slug: "upa",
     imagem: logoUPA,
   },
   {
-    nome: "Mulheres (SAF)",
-    slug: "saf",
-    imagem: logoSAF,
+    nome: "Jovens (UMP)",
+    slug: "ump",
+    imagem: logoUMP,
   },
   {
     nome: "Homens (UPH)",
     slug: "uph",
     imagem: logoUPH,
+  },
+  {
+    nome: "Mulheres (SAF)",
+    slug: "saf",
+    imagem: logoSAF,
   },
 ];
 

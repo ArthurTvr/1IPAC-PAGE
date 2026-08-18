@@ -19,12 +19,22 @@ export default function MinisteriosAdmin() {
   const [diretoria, setDiretoria] = useState([]);
   const [idsOriginais, setIdsOriginais] = useState([]);
 
+  // GALERIA
+  const [fotos, setFotos] = useState([]);
+  const [novaFotoUrl, setNovaFotoUrl] = useState("");
+  const [carregandoFotos, setCarregandoFotos] = useState(false);
+  const [adicionandoFoto, setAdicionandoFoto] = useState(false);
+
   const [carregando, setCarregando] = useState(true);
   const [carregandoDiretoria, setCarregandoDiretoria] = useState(false);
   const [salvando, setSalvando] = useState(false);
 
   const [erro, setErro] = useState("");
   const [sucesso, setSucesso] = useState("");
+
+  // =====================================================
+  // CARREGAR MINISTÉRIOS
+  // =====================================================
 
   useEffect(() => {
     async function carregarMinisterios() {
@@ -48,6 +58,10 @@ export default function MinisteriosAdmin() {
 
     carregarMinisterios();
   }, []);
+
+  // =====================================================
+  // CARREGAR DIRETORIA
+  // =====================================================
 
   useEffect(() => {
     if (!ministerioSelecionado?.id || !anoDiretoria) {
@@ -90,6 +104,43 @@ export default function MinisteriosAdmin() {
     carregarDiretoria();
   }, [ministerioSelecionado?.id, anoDiretoria]);
 
+  // =====================================================
+  // CARREGAR FOTOS
+  // =====================================================
+
+  useEffect(() => {
+    if (!ministerioSelecionado?.id) {
+      setFotos([]);
+      return;
+    }
+
+    async function carregarFotos() {
+      setCarregandoFotos(true);
+
+      const { data, error } = await supabase
+        .from("ministerio_fotos")
+        .select("*")
+        .eq("ministerio_id", ministerioSelecionado.id)
+        .order("ordem", { ascending: true });
+
+      if (error) {
+        console.error(error);
+        setErro("Não foi possível carregar as fotos.");
+        setCarregandoFotos(false);
+        return;
+      }
+
+      setFotos(data || []);
+      setCarregandoFotos(false);
+    }
+
+    carregarFotos();
+  }, [ministerioSelecionado?.id]);
+
+  // =====================================================
+  // SELECIONAR MINISTÉRIO
+  // =====================================================
+
   function selecionarMinisterio(ministerio) {
     setMinisterioSelecionado(ministerio);
 
@@ -103,6 +154,9 @@ export default function MinisteriosAdmin() {
 
     setAtivo(ministerio.ativo ?? true);
 
+    setFotos([]);
+    setNovaFotoUrl("");
+
     setErro("");
     setSucesso("");
 
@@ -111,6 +165,10 @@ export default function MinisteriosAdmin() {
       behavior: "smooth",
     });
   }
+
+  // =====================================================
+  // DIRETORIA
+  // =====================================================
 
   function adicionarCargo() {
     setDiretoria((anterior) => [
@@ -142,6 +200,116 @@ export default function MinisteriosAdmin() {
     );
   }
 
+  // =====================================================
+  // GALERIA - ADICIONAR FOTO
+  // =====================================================
+
+  async function adicionarFoto() {
+    if (!ministerioSelecionado) {
+      return;
+    }
+
+    const url = novaFotoUrl.trim();
+
+    if (!url) {
+      setErro("Informe o link da imagem.");
+      return;
+    }
+
+    try {
+      const urlValidada = new URL(url);
+
+      if (
+        urlValidada.protocol !== "http:" &&
+        urlValidada.protocol !== "https:"
+      ) {
+        throw new Error("URL inválida");
+      }
+    } catch {
+      setErro("Informe um link de imagem válido.");
+      return;
+    }
+
+    setErro("");
+    setSucesso("");
+    setAdicionandoFoto(true);
+
+    const proximaOrdem =
+      fotos.length > 0
+        ? Math.max(...fotos.map((foto) => foto.ordem || 0)) + 1
+        : 1;
+
+    const { data, error } = await supabase
+      .from("ministerio_fotos")
+      .insert({
+        ministerio_id: ministerioSelecionado.id,
+        imagem_url: url,
+        ordem: proximaOrdem,
+        ativo: true,
+      })
+      .select()
+      .single();
+
+    setAdicionandoFoto(false);
+
+    if (error) {
+      console.error(error);
+      setErro("Não foi possível adicionar a foto.");
+      return;
+    }
+
+    setFotos((anteriores) => [...anteriores, data]);
+    setNovaFotoUrl("");
+
+    setSucesso("Foto adicionada à galeria!");
+
+    setTimeout(() => {
+      setSucesso("");
+    }, 3000);
+  }
+
+  // =====================================================
+  // GALERIA - REMOVER FOTO
+  // =====================================================
+
+  async function removerFoto(foto) {
+    const confirmar = window.confirm(
+      "Tem certeza que deseja remover esta foto da galeria?"
+    );
+
+    if (!confirmar) {
+      return;
+    }
+
+    setErro("");
+    setSucesso("");
+
+    const { error } = await supabase
+      .from("ministerio_fotos")
+      .delete()
+      .eq("id", foto.id);
+
+    if (error) {
+      console.error(error);
+      setErro("Não foi possível remover a foto.");
+      return;
+    }
+
+    setFotos((anteriores) =>
+      anteriores.filter((item) => item.id !== foto.id)
+    );
+
+    setSucesso("Foto removida com sucesso!");
+
+    setTimeout(() => {
+      setSucesso("");
+    }, 3000);
+  }
+
+  // =====================================================
+  // SALVAR MINISTÉRIO
+  // =====================================================
+
   async function salvarMinisterio(e) {
     e.preventDefault();
 
@@ -171,7 +339,7 @@ export default function MinisteriosAdmin() {
 
     setSalvando(true);
 
-    // Atualiza os dados principais do ministério
+    // Atualiza dados do ministério
     const { error: erroMinisterio } = await supabase
       .from("ministerios")
       .update({
@@ -191,16 +359,17 @@ export default function MinisteriosAdmin() {
       return;
     }
 
-    // Descobre quais registros existentes foram removidos
+    // IDs que continuam
     const idsMantidos = diretoriaPreenchida
       .filter((item) => item.id)
       .map((item) => item.id);
 
+    // IDs removidos
     const idsRemovidos = idsOriginais.filter(
       (id) => !idsMantidos.includes(id)
     );
 
-    // Exclui cargos removidos
+    // Excluir membros removidos
     if (idsRemovidos.length > 0) {
       const { error: erroExcluir } = await supabase
         .from("ministerio_diretoria")
@@ -215,8 +384,12 @@ export default function MinisteriosAdmin() {
       }
     }
 
-    // Atualiza os registros que já existiam
-    for (let index = 0; index < diretoriaPreenchida.length; index++) {
+    // Atualizar membros existentes
+    for (
+      let index = 0;
+      index < diretoriaPreenchida.length;
+      index++
+    ) {
       const membro = diretoriaPreenchida[index];
 
       if (!membro.id) {
@@ -240,7 +413,7 @@ export default function MinisteriosAdmin() {
       }
     }
 
-    // Insere novos registros
+    // Novos membros
     const novosMembros = diretoriaPreenchida
       .map((membro, index) => ({
         ...membro,
@@ -268,7 +441,7 @@ export default function MinisteriosAdmin() {
       }
     }
 
-    // Atualiza lista local de ministérios
+    // Atualiza lista local
     setMinisterios((anteriores) =>
       anteriores.map((item) =>
         item.id === ministerioSelecionado.id
@@ -293,7 +466,7 @@ export default function MinisteriosAdmin() {
       ativo,
     }));
 
-    // Recarrega a diretoria para pegar IDs novos
+    // Recarrega diretoria
     const { data: diretoriaAtualizada } = await supabase
       .from("ministerio_diretoria")
       .select("*")
@@ -323,6 +496,10 @@ export default function MinisteriosAdmin() {
     }, 3000);
   }
 
+  // =====================================================
+  // JSX
+  // =====================================================
+
   return (
     <main className="min-h-screen bg-[#f7f6f0]">
       {/* HEADER */}
@@ -349,7 +526,6 @@ export default function MinisteriosAdmin() {
       </header>
 
       <div className="mx-auto max-w-7xl px-6 py-10 lg:px-8">
-
         {/* TÍTULO */}
         <div className="mb-8">
           <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#7F7C3F]">
@@ -365,7 +541,7 @@ export default function MinisteriosAdmin() {
           </p>
         </div>
 
-        {/* LISTA DE MINISTÉRIOS */}
+        {/* LISTA */}
         {carregando ? (
           <div className="border border-[#164342]/10 bg-white p-10 text-center text-neutral-500">
             Carregando ministérios...
@@ -521,7 +697,8 @@ export default function MinisteriosAdmin() {
               />
 
               <p className="mt-2 text-xs leading-5 text-neutral-400">
-                Ao mudar o ano, a diretoria correspondente será carregada.
+                Ao mudar o ano, a diretoria correspondente será
+                carregada.
               </p>
             </div>
 
@@ -625,6 +802,124 @@ export default function MinisteriosAdmin() {
                   ))}
                 </div>
               )}
+            </div>
+
+            {/* GALERIA */}
+            <div className="mt-10 border-t border-neutral-100 pt-8">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#7F7C3F]">
+                  Imagens
+                </p>
+
+                <h3 className="mt-2 text-2xl font-semibold text-[#164342]">
+                  Galeria de Fotos
+                </h3>
+
+                <p className="mt-2 text-sm text-neutral-500">
+                  Adicione links das fotos que serão exibidas no
+                  carrossel desta sociedade.
+                </p>
+              </div>
+
+              {/* NOVA FOTO */}
+              <div className="mt-6">
+                <label
+                  htmlFor="foto-url"
+                  className="mb-2 block text-sm font-medium text-neutral-700"
+                >
+                  Link da imagem
+                </label>
+
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <input
+                    id="foto-url"
+                    type="url"
+                    value={novaFotoUrl}
+                    onChange={(e) =>
+                      setNovaFotoUrl(e.target.value)
+                    }
+                    placeholder="https://site.com/foto.jpg"
+                    className="flex-1 border border-neutral-300 px-4 py-3 outline-none transition focus:border-[#164342]"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={adicionarFoto}
+                    disabled={adicionandoFoto}
+                    className="bg-[#164342] px-6 py-3 font-semibold text-white transition hover:bg-[#0F3433] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {adicionandoFoto
+                      ? "Adicionando..."
+                      : "+ Adicionar foto"}
+                  </button>
+                </div>
+              </div>
+
+              {/* PRÉVIA */}
+              {novaFotoUrl && (
+                <div className="mt-5">
+                  <p className="mb-2 text-xs font-medium uppercase tracking-wider text-neutral-400">
+                    Pré-visualização
+                  </p>
+
+                  <div className="h-52 max-w-sm overflow-hidden border border-neutral-200 bg-neutral-100">
+                    <img
+                      src={novaFotoUrl}
+                      alt="Prévia"
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* FOTOS */}
+              <div className="mt-8">
+                {carregandoFotos ? (
+                  <div className="border border-neutral-100 p-8 text-center text-sm text-neutral-500">
+                    Carregando fotos...
+                  </div>
+                ) : fotos.length === 0 ? (
+                  <div className="border border-dashed border-neutral-300 p-8 text-center">
+                    <p className="text-sm text-neutral-500">
+                      Nenhuma foto cadastrada para{" "}
+                      {ministerioSelecionado.nome}.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                    {fotos.map((foto, index) => (
+                      <div
+                        key={foto.id}
+                        className="overflow-hidden border border-neutral-200 bg-white"
+                      >
+                        <div className="aspect-video bg-neutral-100">
+                          <img
+                            src={foto.imagem_url}
+                            alt={`Foto ${index + 1} - ${
+                              ministerioSelecionado.nome
+                            }`}
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between gap-4 p-4">
+                          <span className="text-sm font-medium text-neutral-500">
+                            Foto {index + 1}
+                          </span>
+
+                          <button
+                            type="button"
+                            onClick={() => removerFoto(foto)}
+                            className="text-sm font-semibold text-red-600 transition hover:text-red-800"
+                          >
+                            Remover
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* ATIVO */}
