@@ -131,7 +131,7 @@ export default function Ministerio() {
   }
 
   const imagem = ministerio.imagem_url || imagensMinisterios[ministerio.slug];
-  const numeroWhatsapp = "55DDDNUMERO";
+  const numeroWhatsapp = "5533988263667";
 
   const mensagemWhatsapp = encodeURIComponent(
     `Olá! Gostaria de fazer parte da ${ministerio.nome} - ${ministerio.nome_completo} da 1ª Igreja Presbiteriana de Alto Caparaó. Poderia me passar mais informações?`,
