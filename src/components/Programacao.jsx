@@ -1,15 +1,15 @@
 const programacao = [
   {
-    dia: "Domingo",
-    eventos: ["09:20 - Reunião de Oração","10:00 — Escola Bíblica Dominical", "19:00 — Culto de Adoração"],
+    dia: "Segunda-feira",
+    eventos: ["19:00 — Pequenos Grupos"],
   },
   {
     dia: "Quarta-feira",
     eventos: ["19:30 — Estudo Bíblico"],
   },
   {
-    dia: "Sexta",
-    eventos: ["19:00 — Programação de Jovens"],
+    dia: "Domingo",
+    eventos: ["09:20 — Reunião de Oração","10:00 — Escola Bíblica Dominical", "19:00 — Culto de Adoração"],
   },
 ];
 

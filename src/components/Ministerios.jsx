@@ -1,26 +1,34 @@
+import { Link } from "react-router-dom";
+import ministeriosUCP from "../assets/images/ministeriosucp.jpg";
+
 const ministerios = [
   {
     nome: "Crianças (UCP)",
+    slug: "ucp",
     imagem:
-      "https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9",
+      ministeriosUCP,
   },
   {
     nome: "Jovens (UMP)",
+    slug: "ump",
     imagem:
       "https://images.unsplash.com/photo-1529156069898-49953e39b3ac",
   },
   {
-    nome: "ADOLESCENTES (UPA)",
+    nome: "Adolescentes (UPA)",
+    slug: "upa",
     imagem:
       "https://images.unsplash.com/photo-1529156069898-49953e39b3ac",
   },
   {
     nome: "Mulheres (SAF)",
+    slug: "saf",
     imagem:
       "https://images.unsplash.com/photo-1529156069898-49953e39b3ac",
   },
   {
     nome: "Homens (UPH)",
+    slug: "uph",
     imagem:
       "https://images.unsplash.com/photo-1529156069898-49953e39b3ac",
   },
@@ -42,9 +50,10 @@ export default function Ministerios() {
 
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
           {ministerios.map((ministerio) => (
-            <div
-              key={ministerio.nome}
-              className="group relative h-[400px] overflow-hidden"
+            <Link
+              key={ministerio.slug}
+              to={`/ministerios/${ministerio.slug}`}
+              className="group relative block h-[400px] overflow-hidden"
             >
               <img
                 src={ministerio.imagem}
@@ -63,7 +72,7 @@ export default function Ministerios() {
                   Conheça este ministério →
                 </p>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>
