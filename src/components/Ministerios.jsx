@@ -42,7 +42,7 @@ export default function Ministerios() {
             Sirva conosco
           </p>
 
-          <h2 className="mt-3 text-4xl font-bold">Nossos Ministérios</h2>
+          <h2 className="mt-3 text-4xl font-bold">Nossas Sociedades Internas</h2>
         </div>
 
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-5">

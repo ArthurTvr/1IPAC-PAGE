@@ -5,7 +5,7 @@ const programacao = [
   },
   {
     dia: "Quarta-feira",
-    eventos: ["19:30 — Estudo Bíblico"],
+    eventos: ["19:00 — Estudo Bíblico"],
   },
   {
     dia: "Domingo",
