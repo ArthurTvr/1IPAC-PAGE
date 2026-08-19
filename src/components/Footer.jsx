@@ -40,7 +40,7 @@ export default function Footer() {
               </Link>
 
               <Link to="/#ministerios" className="transition hover:text-white">
-                Ministérios
+                Sociedades Internas
               </Link>
 
               <Link to="/#eventos" className="transition hover:text-white">
