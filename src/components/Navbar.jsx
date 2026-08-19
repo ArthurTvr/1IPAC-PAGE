@@ -8,7 +8,7 @@ export default function Navbar() {
   const links = [
     { nome: "Início", to: "/" },
     { nome: "Sobre", to: "/#sobre" },
-    // { nome: "Cultos", to: "/#cultos" },
+    { nome: "Programação", to: "/#programacao" },
     { nome: "Mensagens", to: "/#mensagens" },
     { nome: "Sociedades Internas", to: "/#ministerios" },
     { nome: "Eventos", to: "/#eventos" },

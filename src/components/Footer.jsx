@@ -27,6 +27,10 @@ export default function Footer() {
                 Início
               </Link>
 
+              <Link to="/#programacao" className="transition hover:text-white">
+                Programação
+              </Link>
+
               <Link to="/#sobre" className="transition hover:text-white">
                 Sobre
               </Link>

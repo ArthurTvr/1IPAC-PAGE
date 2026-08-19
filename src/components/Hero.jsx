@@ -48,7 +48,7 @@ export default function Hero() {
           <div className="mt-10 flex flex-col gap-4 sm:flex-row">
 
             <a
-              href="#cultos"
+              href="#programacao"
               className="inline-flex items-center justify-center bg-[#7F7C3F] px-8 py-4 text-sm font-semibold uppercase tracking-wider text-white transition duration-300 hover:bg-[#97934c]"
             >
               Nossos cultos

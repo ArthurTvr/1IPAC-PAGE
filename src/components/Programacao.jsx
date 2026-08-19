@@ -15,7 +15,7 @@ const programacao = [
 
 export default function Programacao() {
   return (
-    <section className="bg-neutral-100 py-24">
+    <section id="programacao" className="bg-neutral-100 py-24">
       <div className="mx-auto max-w-6xl px-6">
         <div className="mb-14 text-center">
           <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[#164342]">
